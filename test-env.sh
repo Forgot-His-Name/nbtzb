@@ -4,7 +4,7 @@
 
 [ ! -f .env ] || export $(sed 's/#.*//g' .env | xargs)
 
-count=`curl -X GET \
+count=`curl -s -X GET \
  -H "Authorization: TOKEN $NETBOX_TOKEN" \
  -H "Accept: application/json" \
  https://${NETBOX_HOST}/api/dcim/devices.json | jq -e '.count'`

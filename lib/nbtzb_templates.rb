@@ -27,7 +27,10 @@ class Nbtzb
         end
       end
 
-      next if data['zabbix']['parentTemplates'].sort == tids.sort
+      current_ids = data['zabbix']['parentTemplates'].map { |item| item['templateid'] }.sort
+      target_ids = tids.map { |item| item['templateid'] }.sort
+
+      next if current_ids == target_ids
 
       tids_clear = []
       data['zabbix']['parentTemplates'].each do |item|

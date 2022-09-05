@@ -55,32 +55,39 @@ class ApiZabbix
     data = make_api_call req
   end
 
-  def create_device(name, groupids, addr, dns = '')
+  def create_device(name, groupids, opts )
     req = { method: 'host.create', params: {} }
     req[:params][:host] = name
     req[:params][:groups] = groupids.map { |id| { groupid: id } }
-    req[:params][:interfaces] = [ snmp_if_params(addr, dns) ]
+    req[:params][:interfaces] = [ interface_params(opts) ]
 
     data = make_api_call req
   end
 
-  def agent_if_params(addr, dns = '')
-    ip, _mask = addr.split('/')
-    if dns == ''
-      { type: 1, main: 1, useip: 1, ip: ip, dns: '', port: '10050' }
-    else
-      { type: 1, main: 1, useip: 0, ip: ip, dns: dns, port: '10050' }
-    end
-  end
+  def interface_params(opts)
+    result = {}
 
-  def snmp_if_params(addr, dns = '')
-    ip, _mask = addr.split('/')
-    result = { type: 2, main: 1, useip: 0, ip: ip, dns: '', port: '161' }
-    result[:details] = { version: 2, community: '$SNMP_COMMUNITY' }
+    ip, _mask = opts[:ip].split('/')
 
-    if !dns || dns == ''
-      result[:dns] = ''
+    result[:main] = 1
+    result[:ip] = ip
+    result[:dns] = ''
+    result[:useip] = 0
+
+    if opts[:dns]
+      result[:dns] = opts[:dns]
       result[:useip] = 1
+    end
+
+    case opts[:iftype]
+    when :snmp
+      result[:type] = 2
+      result[:port] = '161'
+      result[:details] = { version: 2 }
+      result[:details][:community] = opts[:community]
+    when :agent
+      result[:type] = 1
+      result[:port] = '10050'
     end
 
     result

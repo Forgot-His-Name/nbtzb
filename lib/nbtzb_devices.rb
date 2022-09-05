@@ -34,12 +34,22 @@ class Nbtzb
     devices.each do |name, data|
       next if data['zabbix']
 
-      ip = data['primary_ip']['address']
+      opts = {}
+      opts[:iftype] = :snmp
+      opts[:ip] = data['primary_ip']['address']
+      opts[:dns] = ''
+      opts[:community] = '$SNMP_COMMUNITY'
+
+      if data['config_context'] && data['config_context']['snmp']
+        if data['config_context']['snmp']['community']
+          opts[:community] = data['config_context']['snmp']['community']
+        end
+      end
 
       groupids = []
       groupids << @groups[@default_group]
 
-      @zabbix.create_device name, groupids, ip
+      @zabbix.create_device name, groupids, opts
     end
   end
 end
