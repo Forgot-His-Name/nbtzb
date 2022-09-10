@@ -31,6 +31,10 @@ class ApiZabbix
     resp_data = JSON.parse(resp.body)
 
     if resp_data['error']
+      puts "! zabbix api error !"
+      puts "- request was:"
+      pp req_data
+      puts "- response is:"
       pp resp_data['error']
 
       raise 'zabbix api returns error'
@@ -45,7 +49,7 @@ class ApiZabbix
     data = make_api_call req
   end
 
-  def get_devices
+  def get_hosts
     req = { method: 'host.get', params: {} }
     req[:params][:output] = [ 'hostid', 'host' ]
     req[:params][:selectInterfaces] = [ 'interfaceid', 'ip' ]
@@ -55,7 +59,7 @@ class ApiZabbix
     data = make_api_call req
   end
 
-  def create_device(name, groupids, opts )
+  def create_host(name, groupids, opts )
     req = { method: 'host.create', params: {} }
     req[:params][:host] = name
     req[:params][:groups] = groupids.map { |id| { groupid: id } }
@@ -70,14 +74,9 @@ class ApiZabbix
     ip, _mask = opts[:ip].split('/')
 
     result[:main] = 1
-    result[:ip] = ip
-    result[:dns] = ''
-    result[:useip] = 0
-
-    if opts[:dns]
-      result[:dns] = opts[:dns]
-      result[:useip] = 1
-    end
+    result[:ip] = ip ? ip : ''
+    result[:dns] = opts[:dns]
+    result[:useip] = opts[:useip]
 
     case opts[:iftype]
     when :snmp

@@ -33,4 +33,8 @@ class ApiNetbox
     make_api_call 'dcim/devices.json'
   end
 
+  def get_vms
+    make_api_call 'virtualization/virtual-machines.json'
+  end
+
 end

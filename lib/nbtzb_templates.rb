@@ -11,15 +11,16 @@ class Nbtzb
   end
 
   def sync_templates
-    devices = load_devices
+    hosts = load_hosts
 
-    devices.each do |name, data|
-      next unless data['zabbix']
+    hosts.each do |name, host|
+      next unless host[:zabbix]
 
       tids = []
-      data['config_context'] = {} unless data['config_context']
-      data['config_context']['zabbix_templates'] = [] unless data['config_context']['zabbix_templates']
-      data['config_context']['zabbix_templates'].each do |tname|
+      conf = host['config_context'] ? host['config_context'] : {}
+
+      tlist = conf['zabbix_templates'] ? conf['zabbix_templates'] : []
+      tlist.each do |tname|
         if @templates[tname]
           tids << { 'templateid' => @templates[tname]['templateid'], 'name' => tname }
         else
@@ -27,20 +28,20 @@ class Nbtzb
         end
       end
 
-      current_ids = data['zabbix']['parentTemplates'].map { |item| item['templateid'] }.sort
+      current_ids = host[:zabbix]['parentTemplates'].map { |item| item['templateid'] }.sort
       target_ids = tids.map { |item| item['templateid'] }.sort
 
       next if current_ids == target_ids
 
       tids_clear = []
-      data['zabbix']['parentTemplates'].each do |item|
+      host[:zabbix]['parentTemplates'].each do |item|
         tname = item['name']
-        next if data['config_context']['zabbix_templates'].include? tname
+        next if tlist.include? tname
 
         tids_clear << { 'templateid' => item['templateid'] }
       end
 
-      hostid = data['zabbix']['hostid']
+      hostid = host[:zabbix]['hostid']
       @zabbix.update_templates(hostid, tids, tids_clear)
     end
   end

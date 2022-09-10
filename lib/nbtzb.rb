@@ -25,7 +25,7 @@ class Nbtzb
     load_groups
     sync_groups
 
-    sync_devices
+    sync_hosts
 
     load_templates
     sync_templates
